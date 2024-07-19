@@ -235,7 +235,7 @@ const Chat = () => {
                 <div className={styles.chatContainer}>
                     {!lastQuestionRef.current ? (
                         <div className={styles.chatEmptyState}>
-                            <SparkleFilled fontSize={"120px"} primaryFill={"rgba(115, 118, 225, 1)"} aria-hidden="true" aria-label="Chat logo" />
+                            <SparkleFilled fontSize={"120px"} primaryFill={"rgba(115, 118, 224, 1)"} aria-hidden="true" aria-label="Chat logo" />
                             <h1 className={styles.chatEmptyStateTitle}>Chat with your project data</h1>
                             <h2 className={styles.chatEmptyStateSubtitle}>Ask anything or try one of these examples</h2>
                             <ExampleList onExampleClicked={onExampleClicked} />
