@@ -25,7 +25,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyBpc-yWt3kwpXy7oy2XKzC2p-fRNrOcagQ",
+  apiKey: "AIzaSyA3aSE3eLNeQMxFd-s32ajRk5cu8l5aEn4",
   authDomain: "projectpalai-83a5f.firebaseapp.com",
   projectId: "projectpalai-83a5f",
   storageBucket: "projectpalai-83a5f.appspot.com",
