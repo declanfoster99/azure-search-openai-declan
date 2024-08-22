@@ -29,12 +29,16 @@ def is_key_empty(key):
 
 def setup_file_strategy(credential: AsyncTokenCredential, args: Any) -> FileStrategy:
     storage_creds = credential if is_key_empty(args.storagekey) else args.storagekey
+
+    print("HERE 1")
     blob_manager = BlobManager(
         endpoint=f"https://{args.storageaccount}.blob.core.windows.net",
         container=args.container,
         credential=storage_creds,
         verbose=args.verbose,
     )
+
+    print("HERE 2")
 
     pdf_parser: PdfParser
     if args.localpdfparser:
@@ -54,6 +58,9 @@ def setup_file_strategy(credential: AsyncTokenCredential, args: Any) -> FileStra
             credential=formrecognizer_creds,
             verbose=args.verbose,
         )
+
+    print("HERE 3")
+
 
     use_vectors = not args.novectors
     embeddings: Optional[OpenAIEmbeddings] = None
@@ -78,6 +85,9 @@ def setup_file_strategy(credential: AsyncTokenCredential, args: Any) -> FileStra
             verbose=args.verbose,
         )
 
+    print("HERE 4")
+
+
     print("Processing files...")
     list_file_strategy: ListFileStrategy
     if args.datalakestorageaccount:
@@ -101,6 +111,8 @@ def setup_file_strategy(credential: AsyncTokenCredential, args: Any) -> FileStra
     else:
         document_action = DocumentAction.Add
 
+    print("HERE 5")
+
     return FileStrategy(
         list_file_strategy=list_file_strategy,
         blob_manager=blob_manager,
@@ -118,6 +130,10 @@ async def main(strategy: Strategy, credential: AsyncTokenCredential, args: Any):
     search_creds: Union[AsyncTokenCredential, AzureKeyCredential] = (
         credential if is_key_empty(args.searchkey) else AzureKeyCredential(args.searchkey)
     )
+
+    print("HERE 7.1",search_creds)
+
+
     search_info = SearchInfo(
         endpoint=f"https://{args.searchservice}.search.windows.net/",
         credential=search_creds,
@@ -252,6 +268,9 @@ if __name__ == "__main__":
     )
 
     file_strategy = setup_file_strategy(azd_credential, args)
+
     loop = asyncio.get_event_loop()
+    print("HERE 7")
     loop.run_until_complete(main(file_strategy, azd_credential, args))
+    print("HERE 8")
     loop.close()

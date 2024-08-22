@@ -1,4 +1,5 @@
 import html
+import socket
 from abc import ABC
 from typing import IO, AsyncGenerator, Union
 
@@ -72,14 +73,28 @@ class DocumentAnalysisPdfParser(PdfParser):
         self.verbose = verbose
 
     async def parse(self, content: IO) -> AsyncGenerator[Page, None]:
+
+        print("HERE 8.1")
+
         if self.verbose:
             print(f"Extracting text from '{content.name}' using Azure Document Intelligence")
+
+        print("HERE 8.11")
 
         async with DocumentAnalysisClient(
             endpoint=self.endpoint, credential=self.credential, headers={"x-ms-useragent": USER_AGENT}
         ) as form_recognizer_client:
+
+            print("SOCKET",socket.gethostname())
+
+
+            print("HERE 8.12",self.endpoint,self.credential,self.model_id,content)
             poller = await form_recognizer_client.begin_analyze_document(model_id=self.model_id, document=content)
+            print("HERE 8.13")
             form_recognizer_results = await poller.result()
+
+            print("HERE 8.2")
+
 
             offset = 0
             for page_num, page in enumerate(form_recognizer_results.pages):
@@ -88,6 +103,8 @@ class DocumentAnalysisPdfParser(PdfParser):
                     for table in (form_recognizer_results.tables or [])
                     if table.bounding_regions and table.bounding_regions[0].page_number == page_num + 1
                 ]
+
+                print("HERE 8.3")
 
                 # mark all positions of the table spans in the page
                 page_offset = page.spans[0].offset
@@ -101,6 +118,9 @@ class DocumentAnalysisPdfParser(PdfParser):
                             if idx >= 0 and idx < page_length:
                                 table_chars[idx] = table_id
 
+                print("HERE 8.4")
+
+
                 # build page text by replacing characters in table spans with table html
                 page_text = ""
                 added_tables = set()
@@ -113,6 +133,8 @@ class DocumentAnalysisPdfParser(PdfParser):
 
                 yield Page(page_num=page_num, offset=offset, text=page_text)
                 offset += len(page_text)
+        print("HERE 8.5")
+
 
     @classmethod
     def table_to_html(cls, table: DocumentTable):

@@ -33,7 +33,19 @@ export async function askApi(request: ChatAppRequest, idToken: string | undefine
 }
 
 export async function chatApi(request: ChatAppRequest, idToken: string | undefined): Promise<Response> {
+    console.log("SENDING CHAT API")
     return await fetch(`${BACKEND_URI}/chat`, {
+        method: "POST",
+        headers: getHeaders(idToken),
+        body: JSON.stringify(request)
+    });
+}
+
+
+export async function testScriptApi(request: ChatAppRequest, idToken: string | undefined): Promise<Response> {
+
+    console.log("SENDING TEST API")
+    return await fetch(`${BACKEND_URI}/testScript`, {
         method: "POST",
         headers: getHeaders(idToken),
         body: JSON.stringify(request)

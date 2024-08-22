@@ -45,6 +45,8 @@ Error type: {error_type}
 ERROR_MESSAGE_FILTER = """Your message contains content that was flagged by the OpenAI content filter."""
 
 bp = Blueprint("routes", __name__, static_folder="static")
+bpNew = Blueprint('routesNew', __name__, static_folder="static")
+
 # Fix Windows registry issue with mimetypes
 mimetypes.add_type("application/javascript", ".js")
 mimetypes.add_type("text/css", ".css")
@@ -102,6 +104,11 @@ async def content_file(path: str):
 def error_dict(error: Exception) -> dict:
     if isinstance(error, APIError) and error.code == "content_filter":
         return {"error": ERROR_MESSAGE_FILTER}
+
+    print("ERROR DICT",error)
+    logging.info(f,"ERROR DICT",error)
+
+    # return {"error":error}
     return {"error": ERROR_MESSAGE.format(error_type=type(error))}
 
 
@@ -139,8 +146,19 @@ async def format_as_ndjson(r: AsyncGenerator[dict, None]) -> AsyncGenerator[str,
         yield json.dumps(error_dict(e))
 
 
+@bpNew.route("/testScript", methods=["POST"])
+async def testScript():
+    logging.info("SCRIPT TESTING")
+
+    response = await make_response({hello:world})
+    return response
+
+
+
 @bp.route("/chat", methods=["POST"])
 async def chat():
+
+    logging.info("RUNNING CHAT FUNCTION NOW")
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
@@ -283,8 +301,13 @@ async def setup_clients():
 
 
 def create_app():
+
+    logging.info("RUNNING CREaTe APP")
+    print("RCA HEY")
+
     app = Quart(__name__)
     app.register_blueprint(bp)
+    app.register_blueprint(bpNew)
 
     if os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING"):
         configure_azure_monitor()
