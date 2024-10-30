@@ -115,25 +115,25 @@ export default function Manage(): JSX.Element {
     const items: Item[] = projects.flatMap(project =>
         project.users
             ? project.users.map(user => ({
-                  projectId: project.projectID,
-                  firstName: { label: user.firstName, icon: user.projectRole === "Owner" || user.projectRole === "Admin" ? <Premium20Regular /> : "" },
-                  lastName: user.lastName,
-                  emailAddress: user.emailAddress,
-                  projectRole: user.projectRole || "Member",
-                  initialPasswordChanged: user.initialPasswordChanged ? "Yes" : "No",
-                  edit: {
-                      label: "",
-                      icon:
-                          userData &&
-                          userData.projectRole !== "Member" &&
-                          userData.uuid !== user.uuid &&
-                          (user.projectRole === "Member" || (userData.projectRole === "Admin" && user.projectRole !== "Admin")) ? (
-                              <Edit20Regular style={{ cursor: "pointer" }} onClick={() => handleEditClick(user, project)} />
-                          ) : (
-                              <Dismiss20Filled style={{ cursor: "pointer" }} />
-                          )
-                  }
-              }))
+                projectId: project.projectID,
+                firstName: { label: user.firstName, icon: user.projectRole === "Owner" || user.projectRole === "Admin" ? <Premium20Regular /> : "" },
+                lastName: user.lastName,
+                emailAddress: user.emailAddress,
+                projectRole: user.projectRole || "Member",
+                initialPasswordChanged: user.initialPasswordChanged ? "Yes" : "No",
+                edit: {
+                    label: "",
+                    icon:
+                        userData &&
+                            userData.projectRole !== "Member" &&
+                            userData.uuid !== user.uuid &&
+                            (user.projectRole === "Member" || (userData.projectRole === "Admin" && user.projectRole !== "Admin")) ? (
+                            <Edit20Regular style={{ cursor: "pointer" }} onClick={() => handleEditClick(user, project)} />
+                        ) : (
+                            <Dismiss20Filled style={{ cursor: "pointer" }} />
+                        )
+                }
+            }))
             : []
     );
     const [columns] = React.useState<TableColumnDefinition<Item>[]>(columnsDef);
@@ -306,6 +306,7 @@ export default function Manage(): JSX.Element {
         const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
         const index = project.projectIndex || project.projectID || "";
         const container = project.projectContainer || project.projectID || "";
+
         // Retrieve the token asynchronously
         useEffect(() => {
             const fetchToken = async () => {
@@ -324,39 +325,54 @@ export default function Manage(): JSX.Element {
             }
         }, [client]);
 
+        // Modified onDrop function
         const onDrop = useCallback(
-            (acceptedFiles: any) => {
+            async (acceptedFiles: any) => {
                 console.log(acceptedFiles);
-                setFiles(acceptedFiles);
                 let filePaths: string[] = [];
+                let processedFiles: any[] = [];
 
-                acceptedFiles.forEach((file: any) => {
-                    filePaths.push(file.name); // Use file.name for better compatibility
-                });
+                for (const file of acceptedFiles) {
+                    if (file.type === "text/csv" || file.name.endsWith(".csv")) {
+                        // Read the contents of the CSV file
+                        const textContent = await file.text();
 
+                        // Create a new Blob with text/plain type
+                        const txtBlob = new Blob([textContent], { type: "text/plain" });
+
+                        // Create a new File object with .txt extension
+                        const txtFile = new File([txtBlob], file.name.replace(/\.csv$/, ".txt"), { type: "text/plain" });
+
+                        processedFiles.push(txtFile);
+                        filePaths.push(txtFile.name);
+                    } else {
+                        processedFiles.push(file);
+                        filePaths.push(file.name);
+                    }
+                }
+
+                setFiles(processedFiles);
                 setFilePath(filePaths.join(", "));
                 console.log("Files added: " + filePaths.join(", "));
-
-                // console.log("Index & Container: " + projectIndex + " " + projectContainer);
-
                 console.log("Index & Container: " + index + " " + container);
-                // Build the request object
             },
             [token, index, container]
         );
+
         const onUploadClick = () => {
             const request: FileUploadRequest = {
                 azureIndex: index,
                 azureContainer: container,
-                files: files
+                files: files,
             };
             setUploadingLoading(true);
             console.log("Request: " + JSON.stringify(request));
             setErrorMessage(undefined);
             setSuccessMessage(undefined);
+
             // Call the uploadFilesApi function to upload the files
             uploadFilesApi(request, token)
-                .then(async response => {
+                .then(async (response) => {
                     if (response.ok) {
                         console.log("Files uploaded successfully:", response);
                         setUploadingLoading(false);
@@ -375,7 +391,7 @@ export default function Manage(): JSX.Element {
                         // Optionally, you could display the error to the user here
                     }
                 })
-                .catch(error => {
+                .catch((error) => {
                     console.error("Error uploading files:", error);
                     setUploadingLoading(false);
                     setErrorMessage("Error uploading files: " + errorMessage);
@@ -391,7 +407,18 @@ export default function Manage(): JSX.Element {
                 setErrorMessage(undefined);
             }, 5000);
         }, [errorMessage, successMessage]);
-        const { getRootProps, getInputProps } = useDropzone({ onDrop, multiple: false, accept: { "application/pdf": [".pdf"],"text/plain": [".txt"]} });
+
+        // Updated accept parameter to include CSV files
+        const { getRootProps, getInputProps } = useDropzone({
+            onDrop,
+            multiple: false,
+            accept: {
+                "application/pdf": [".pdf"],
+                "text/plain": [".txt"],
+                "text/csv": [".csv"],
+            },
+        });
+
         return (
             <>
                 {!uploadingLoading && (
@@ -426,6 +453,7 @@ export default function Manage(): JSX.Element {
             </>
         );
     }
+
 
     useEffect(() => {
         if (!auth.currentUser) {
