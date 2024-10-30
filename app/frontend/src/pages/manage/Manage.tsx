@@ -44,6 +44,7 @@ import { v4 as uuidv4 } from "uuid";
 import { jsPDF } from "jspdf";
 import { useNavigate, useLocation } from "react-router-dom";
 
+
 export default function Manage(): JSX.Element {
     const [userData, setUserData] = useState<User | null>(null);
     const [projects, setProjects] = useState<Project[]>([]);
