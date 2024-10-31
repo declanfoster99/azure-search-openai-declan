@@ -41,6 +41,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useLogin, getToken } from "../../authConfig";
 import { useMsal } from "@azure/msal-react";
 import { v4 as uuidv4 } from "uuid";
+import { jsPDF } from "jspdf";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Manage(): JSX.Element {
@@ -306,6 +307,7 @@ export default function Manage(): JSX.Element {
         const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
         const index = project.projectIndex || project.projectID || "";
         const container = project.projectContainer || project.projectID || "";
+
         // Retrieve the token asynchronously
         useEffect(() => {
             const fetchToken = async () => {
@@ -324,26 +326,48 @@ export default function Manage(): JSX.Element {
             }
         }, [client]);
 
+        // Modified onDrop function
         const onDrop = useCallback(
-            (acceptedFiles: any) => {
+            async (acceptedFiles: any) => {
                 console.log(acceptedFiles);
-                setFiles(acceptedFiles);
                 let filePaths: string[] = [];
+                let processedFiles: any[] = [];
 
-                acceptedFiles.forEach((file: any) => {
-                    filePaths.push(file.name); // Use file.name for better compatibility
-                });
+                for (const file of acceptedFiles) {
+                    filePaths.push(file.path);
+                    if (file.type === "text/plain" || file.name.endsWith(".txt") || file.type === "text/csv" || file.name.endsWith(".csv")) {
+                        // Read the contents of the TXT or CSV file
+                        const textContent = await file.text();
 
+                        // Create a new jsPDF instance
+                        const doc = new jsPDF();
+
+                        // Split the text content into lines to prevent overflow
+                        const lines = doc.splitTextToSize(textContent, 180); // Adjust as needed
+
+                        // Add the text content to the PDF
+                        doc.text(lines, 10, 10);
+
+                        // Generate the PDF as a blob
+                        const pdfBlob = doc.output("blob");
+
+                        // Create a new File object with .pdf extension
+                        const pdfFile = new File([pdfBlob], file.name.replace(/\.(txt|csv)$/, ".pdf"), { type: "application/pdf" });
+
+                        processedFiles.push(pdfFile);
+                    } else {
+                        processedFiles.push(file);
+                    }
+                }
+
+                setFiles(processedFiles);
                 setFilePath(filePaths.join(", "));
                 console.log("Files added: " + filePaths.join(", "));
-
-                // console.log("Index & Container: " + projectIndex + " " + projectContainer);
-
                 console.log("Index & Container: " + index + " " + container);
-                // Build the request object
             },
             [token, index, container]
         );
+
         const onUploadClick = () => {
             const request: FileUploadRequest = {
                 azureIndex: index,
@@ -354,6 +378,7 @@ export default function Manage(): JSX.Element {
             console.log("Request: " + JSON.stringify(request));
             setErrorMessage(undefined);
             setSuccessMessage(undefined);
+
             // Call the uploadFilesApi function to upload the files
             uploadFilesApi(request, token)
                 .then(async response => {
@@ -378,7 +403,7 @@ export default function Manage(): JSX.Element {
                 .catch(error => {
                     console.error("Error uploading files:", error);
                     setUploadingLoading(false);
-                    setErrorMessage("Error uploading files: " + errorMessage);
+                    setErrorMessage("Error uploading files: " + error.message);
                     setFiles(undefined);
                     setFilePath("");
                     // Handle network or other errors
@@ -391,7 +416,18 @@ export default function Manage(): JSX.Element {
                 setErrorMessage(undefined);
             }, 5000);
         }, [errorMessage, successMessage]);
-        const { getRootProps, getInputProps } = useDropzone({ onDrop, multiple: false, accept: { "application/pdf": [".pdf"],"text/plain": [".txt"]} });
+
+        // Updated accept parameter to include CSV and TXT files
+        const { getRootProps, getInputProps } = useDropzone({
+            onDrop,
+            multiple: false,
+            accept: {
+                "application/pdf": [".pdf"],
+                "text/plain": [".txt"],
+                "text/csv": [".csv"]
+            }
+        });
+
         return (
             <>
                 {!uploadingLoading && (
