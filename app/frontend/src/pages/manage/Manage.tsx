@@ -366,10 +366,11 @@ export default function Manage(): JSX.Element {
                         filePaths.push(file.name);
                     }
                 }
+                const originalPaths = [acceptedFiles.map((file: any) => file.path)];
 
                 setFiles(processedFiles);
-                setFilePath(filePaths.join(", "));
-                console.log("Files added: " + filePaths.join(", "));
+                setFilePath(originalPaths.join(", "));
+                console.log("Files added: " + originalPaths.join(", "));
                 console.log("Index & Container: " + index + " " + container);
             },
             [token, index, container]
