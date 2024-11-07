@@ -74,8 +74,8 @@ const Chat = (dropdownProps: Partial<DropdownProps>) => {
     const [currentProject, setCurrentProject] = useState<string>("default");
     const [projectOptions, setProjectOptions] = useState<ProjectOptions[]>([]);
 
-    const [index, setIndex] = useState<string>("gptkbindex");
-    const [container, setContainer] = useState<string>("content");
+    const [index, setIndex] = useState<string>("");
+    const [container, setContainer] = useState<string>("");
     // const [savedChats, setSavedChats] = useState<any>([]);
     // const [openSave, setOpenSave] = useState<boolean>(false);
     // const [loadingSaveChat, setLoadingSaveChat] = useState<boolean>(false);
@@ -361,6 +361,7 @@ const Chat = (dropdownProps: Partial<DropdownProps>) => {
                 projects.forEach((project: Project) => {
                     // console.log("PROJECT", project)
                     compArray.push({
+                        projectID: project.projectID ?? "",
                         projectName: project.projectName ?? "",
                         projectIndex: project.projectIndex ?? project.projectID ?? "",
                         projectContainer: project.projectContainer ?? project.projectID ?? ""
@@ -368,6 +369,8 @@ const Chat = (dropdownProps: Partial<DropdownProps>) => {
                 });
                 setProjectOptions(compArray);
                 setCurrentProject(compArray[0].projectName);
+                setIndex(compArray[0].projectIndex ?? compArray[0].projectID ?? "");
+                setContainer(compArray[0].projectContainer ?? compArray[0].projectID ?? "");
             }
         }
     }, []);
@@ -375,9 +378,6 @@ const Chat = (dropdownProps: Partial<DropdownProps>) => {
     return (
         <div className={styles.container}>
             <div className={styles.chatRoot}>
-                <div style={{ width: "122px", right: "auto", position: "sticky" }}>
-                    <Switch label={module} labelPosition={"above"} onClick={handleSwitchModule} />
-                </div>
                 <div className={styles.chatContainer}>
                     {/* {savedChats && <div className={styles.savedChats}>Saved chats</div>}
 
@@ -715,6 +715,9 @@ const Chat = (dropdownProps: Partial<DropdownProps>) => {
                     />
                     {useLogin && <TokenClaimsDisplay />}
                 </Panel>
+                <div style={{ width: "122px", right: "auto", position: "sticky" }}>
+                    <Switch label={module} labelPosition={"above"} onClick={handleSwitchModule} />
+                </div>
             </div>
         </div>
     );

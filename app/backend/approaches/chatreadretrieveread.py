@@ -69,7 +69,8 @@ If you cannot generate a search query, return just the number 0.
         openai_client: AsyncOpenAI,
         chatgpt_model: str,
         chatgpt_deployment: Optional[str],  # Not needed for non-Azure OpenAI
-        embedding_deployment: Optional[str],  # Not needed for non-Azure OpenAI or for retrieval_mode="text"
+        # Not needed for non-Azure OpenAI or for retrieval_mode="text"
+        embedding_deployment: Optional[str],
         embedding_model: str,
         sourcepage_field: str,
         content_field: str,
@@ -116,8 +117,10 @@ If you cannot generate a search query, return just the number 0.
         should_stream: bool = False,
     ) -> tuple[dict[str, Any], Coroutine[Any, Any, Union[ChatCompletion, AsyncStream[ChatCompletionChunk]]]]:
         has_text = overrides.get("retrieval_mode") in ["text", "hybrid", None]
-        has_vector = overrides.get("retrieval_mode") in ["vectors", "hybrid", None]
-        use_semantic_captions = True if overrides.get("semantic_captions") and has_text else False
+        has_vector = overrides.get("retrieval_mode") in [
+            "vectors", "hybrid", None]
+        use_semantic_captions = True if overrides.get(
+            "semantic_captions") and has_text else False
         top = overrides.get("top", 3)
         filter = self.build_filter(overrides, auth_claims)
         original_user_query = history[-1]["content"]
@@ -154,13 +157,15 @@ If you cannot generate a search query, return just the number 0.
             # Azure Open AI takes the deployment name as the model name
             model=self.chatgpt_deployment if self.chatgpt_deployment else self.chatgpt_model,
             temperature=0.0,
-            max_tokens=100,  # Setting too low risks malformed JSON, setting too high may affect performance
+            # Setting too low risks malformed JSON, setting too high may affect performance
+            max_tokens=100,
             n=1,
             functions=functions,
             function_call="auto",
         )
 
-        query_text = self.get_search_query(chat_completion, original_user_query)
+        query_text = self.get_search_query(
+            chat_completion, original_user_query)
 
         # STEP 2: Retrieve relevant documents from the search index with the GPT optimized query
 
@@ -173,7 +178,8 @@ If you cannot generate a search query, return just the number 0.
                 input=query_text,
             )
             query_vector = embedding.data[0].embedding
-            vectors.append(RawVectorQuery(vector=query_vector, k=50, fields="embedding"))
+            vectors.append(RawVectorQuery(
+                vector=query_vector, k=50, fields="embedding"))
 
         # Only keep the text query if the retrieval mode uses text, otherwise drop it
         if not has_text:
@@ -196,7 +202,9 @@ If you cannot generate a search query, return just the number 0.
             r = await self.search_client.search(query_text, filter=filter, top=top, vector_queries=vectors)
         if use_semantic_captions:
             results = [
-                doc[self.sourcepage_field] + ": " + nonewlines(" . ".join([c.text for c in doc["@search.captions"]]))
+                doc[self.sourcepage_field] + ": " +
+                nonewlines(" . ".join(
+                    [c.text for c in doc["@search.captions"]]))
                 async for doc in r
             ]
         else:
@@ -204,7 +212,8 @@ If you cannot generate a search query, return just the number 0.
         content = "\n".join(results)
 
         follow_up_questions_prompt = (
-            self.follow_up_questions_prompt_content if overrides.get("suggest_followup_questions") else ""
+            self.follow_up_questions_prompt_content if overrides.get(
+                "suggest_followup_questions") else ""
         )
 
         # STEP 3: Generate a contextual and content specific answer using the search results and chat history
@@ -220,7 +229,8 @@ If you cannot generate a search query, return just the number 0.
                 injected_prompt=prompt_override[3:] + "\n", follow_up_questions_prompt=follow_up_questions_prompt
             )
         else:
-            system_message = prompt_override.format(follow_up_questions_prompt=follow_up_questions_prompt)
+            system_message = prompt_override.format(
+                follow_up_questions_prompt=follow_up_questions_prompt)
 
         response_token_limit = 1024
         messages_token_limit = self.chatgpt_token_limit - response_token_limit
@@ -262,10 +272,12 @@ If you cannot generate a search query, return just the number 0.
             history, overrides, auth_claims, should_stream=False
         )
         chat_completion_response: ChatCompletion = await chat_coroutine
-        chat_resp = chat_completion_response.model_dump()  # Convert to dict to make it JSON serializable
+        # Convert to dict to make it JSON serializable
+        chat_resp = chat_completion_response.model_dump()
         chat_resp["choices"][0]["context"] = extra_info
         if overrides.get("suggest_followup_questions"):
-            content, followup_questions = self.extract_followup_questions(chat_resp["choices"][0]["message"]["content"])
+            content, followup_questions = self.extract_followup_questions(
+                chat_resp["choices"][0]["message"]["content"])
             chat_resp["choices"][0]["message"]["content"] = content
             chat_resp["choices"][0]["context"]["followup_questions"] = followup_questions
         chat_resp["choices"][0]["session_state"] = session_state
@@ -309,13 +321,14 @@ If you cannot generate a search query, return just the number 0.
                     if earlier_content:
                         event["choices"][0]["delta"]["content"] = earlier_content
                         yield event
-                    followup_content += content[content.index("<<") :]
+                    followup_content += content[content.index("<<"):]
                 elif followup_questions_started:
                     followup_content += content
                 else:
                     yield event
         if followup_content:
-            _, followup_questions = self.extract_followup_questions(followup_content)
+            _, followup_questions = self.extract_followup_questions(
+                followup_content)
             yield {
                 "choices": [
                     {
@@ -351,20 +364,26 @@ If you cannot generate a search query, return just the number 0.
 
         # Add examples to show the chat what responses we want. It will try to mimic any responses and make sure they match the rules laid out in the system message.
         for shot in reversed(few_shots):
-            message_builder.insert_message(shot.get("role"), shot.get("content"))
+            message_builder.insert_message(
+                shot.get("role"), shot.get("content"))
 
         append_index = len(few_shots) + 1
 
-        message_builder.insert_message(self.USER, user_content, index=append_index)
-        total_token_count = message_builder.count_tokens_for_message(dict(message_builder.messages[-1]))  # type: ignore
+        message_builder.insert_message(
+            self.USER, user_content, index=append_index)
+        total_token_count = message_builder.count_tokens_for_message(
+            dict(message_builder.messages[-1]))  # type: ignore
 
         newest_to_oldest = list(reversed(history[:-1]))
         for message in newest_to_oldest:
-            potential_message_count = message_builder.count_tokens_for_message(message)
+            potential_message_count = message_builder.count_tokens_for_message(
+                message)
             if (total_token_count + potential_message_count) > max_tokens:
-                logging.debug("Reached max tokens of %d, history will be truncated", max_tokens)
+                logging.debug(
+                    "Reached max tokens of %d, history will be truncated", max_tokens)
                 break
-            message_builder.insert_message(message["role"], message["content"], index=append_index)
+            message_builder.insert_message(
+                message["role"], message["content"], index=append_index)
             total_token_count += potential_message_count
         return message_builder.messages
 

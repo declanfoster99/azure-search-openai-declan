@@ -59,12 +59,12 @@ param formRecognizerResourceGroupLocation string = location
 param formRecognizerSkuName string = 'S0'
 
 param chatGptDeploymentName string // Set in main.parameters.json
-param chatGptDeploymentCapacity int = 30
-param chatGptModelName string = (openAiHost == 'azure') ? 'gpt-35-turbo' : 'gpt-3.5-turbo'
-param chatGptModelVersion string = '0613'
+param chatGptDeploymentCapacity int = 80
+param chatGptModelName string = (openAiHost == 'azure') ? 'gpt-4o' : 'gpt-4o'
+param chatGptModelVersion string = '2024-08-06'
 param embeddingDeploymentName string // Set in main.parameters.json
-param embeddingDeploymentCapacity int = 30
-param embeddingModelName string = 'text-embedding-ada-002'
+param embeddingDeploymentCapacity int = 120
+param embeddingModelName string = 'text-embedding-3-large'
 
 // Used for the optional login and document level access control system
 param useAuthentication bool = false
@@ -223,7 +223,7 @@ module openAi 'core/ai/cognitiveservices.bicep' = if (openAiHost == 'azure') {
         model: {
           format: 'OpenAI'
           name: embeddingModelName
-          version: '2'
+          version: '1'
         }
         sku: {
           name: 'Standard'

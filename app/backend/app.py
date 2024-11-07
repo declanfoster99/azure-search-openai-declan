@@ -322,7 +322,7 @@ async def setup_clients():
     OPENAI_HOST = os.getenv("OPENAI_HOST", "azure")
     OPENAI_CHATGPT_MODEL = os.environ["AZURE_OPENAI_CHATGPT_MODEL"]
     OPENAI_EMB_MODEL = os.getenv(
-        "AZURE_OPENAI_EMB_MODEL_NAME", "text-embedding-ada-002")
+        "AZURE_OPENAI_EMB_MODEL_NAME", "text-embedding-3-large")
     # Used with Azure OpenAI deployments
     AZURE_OPENAI_SERVICE = os.getenv("AZURE_OPENAI_SERVICE")
     AZURE_OPENAI_CHATGPT_DEPLOYMENT = os.getenv(
@@ -438,7 +438,7 @@ async def set_index_and_container(index, container):
     OPENAI_HOST = os.getenv("OPENAI_HOST", "azure")
     OPENAI_CHATGPT_MODEL = os.environ["AZURE_OPENAI_CHATGPT_MODEL"]
     OPENAI_EMB_MODEL = os.getenv(
-        "AZURE_OPENAI_EMB_MODEL_NAME", "text-embedding-ada-002")
+        "AZURE_OPENAI_EMB_MODEL_NAME", "text-embedding-3-large")
     # Used with Azure OpenAI deployments
     AZURE_OPENAI_CHATGPT_DEPLOYMENT = os.getenv(
         "AZURE_OPENAI_CHATGPT_DEPLOYMENT") if OPENAI_HOST == "azure" else None

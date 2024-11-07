@@ -14,6 +14,7 @@ def test_get_token_limit():
     assert get_token_limit("gpt-3.5-turbo-16k") == 16000
     assert get_token_limit("gpt-4") == 8100
     assert get_token_limit("gpt-4-32k") == 32000
+    assert get_token_limit("gpt-4o") == 128000
 
 
 def test_get_token_limit_error():
