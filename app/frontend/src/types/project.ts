@@ -16,6 +16,7 @@ interface NewProject {
 }
 
 interface ProjectOptions {
+    projectID: string;
     projectName: string;
     projectIndex: string;
     projectContainer: string;

@@ -30,7 +30,8 @@ class OpenAIEmbeddings(ABC):
     Can split source text into batches for more efficient embedding calls
     """
 
-    SUPPORTED_BATCH_AOAI_MODEL = {"text-embedding-ada-002": {"token_limit": 8100, "max_batch_size": 16}}
+    SUPPORTED_BATCH_AOAI_MODEL = {
+        "text-embedding-3-large": {"token_limit": 8100, "max_batch_size": 16}}
 
     def __init__(self, open_ai_model_name: str, disable_batch: bool = False, verbose: bool = False):
         self.open_ai_model_name = open_ai_model_name
@@ -42,14 +43,16 @@ class OpenAIEmbeddings(ABC):
 
     def before_retry_sleep(self, retry_state):
         if self.verbose:
-            print("Rate limited on the OpenAI embeddings API, sleeping before retrying...")
+            print(
+                "Rate limited on the OpenAI embeddings API, sleeping before retrying...")
 
     def calculate_token_length(self, text: str):
         encoding = tiktoken.encoding_for_model(self.open_ai_model_name)
         return len(encoding.encode(text))
 
     def split_text_into_batches(self, texts: List[str]) -> List[EmbeddingBatch]:
-        batch_info = OpenAIEmbeddings.SUPPORTED_BATCH_AOAI_MODEL.get(self.open_ai_model_name)
+        batch_info = OpenAIEmbeddings.SUPPORTED_BATCH_AOAI_MODEL.get(
+            self.open_ai_model_name)
         if not batch_info:
             raise NotImplementedError(
                 f"Model {self.open_ai_model_name} is not supported with batch embedding operations"
@@ -92,9 +95,11 @@ class OpenAIEmbeddings(ABC):
             ):
                 with attempt:
                     emb_response = await client.embeddings.create(model=self.open_ai_model_name, input=batch.texts)
-                    embeddings.extend([data.embedding for data in emb_response.data])
+                    embeddings.extend(
+                        [data.embedding for data in emb_response.data])
                     if self.verbose:
-                        print(f"Batch Completed. Batch size  {len(batch.texts)} Token count {batch.token_length}")
+                        print(
+                            f"Batch Completed. Batch size  {len(batch.texts)} Token count {batch.token_length}")
 
         return embeddings
 

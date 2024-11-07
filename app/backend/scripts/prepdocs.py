@@ -28,7 +28,8 @@ def is_key_empty(key):
 
 
 def setup_file_strategy(credential: AsyncTokenCredential, args: Any) -> FileStrategy:
-    storage_creds = credential if is_key_empty(args.storagekey) else args.storagekey
+    storage_creds = credential if is_key_empty(
+        args.storagekey) else args.storagekey
     blob_manager = BlobManager(
         endpoint=f"https://{args.storageaccount}.blob.core.windows.net",
         container=args.container,
@@ -47,7 +48,8 @@ def setup_file_strategy(credential: AsyncTokenCredential, args: Any) -> FileStra
             )
             exit(1)
         formrecognizer_creds: Union[AsyncTokenCredential, AzureKeyCredential] = (
-            credential if is_key_empty(args.formrecognizerkey) else AzureKeyCredential(args.formrecognizerkey)
+            credential if is_key_empty(
+                args.formrecognizerkey) else AzureKeyCredential(args.formrecognizerkey)
         )
         pdf_parser = DocumentAnalysisPdfParser(
             endpoint=f"https://{args.formrecognizerservice}.cognitiveservices.azure.com/",
@@ -59,7 +61,8 @@ def setup_file_strategy(credential: AsyncTokenCredential, args: Any) -> FileStra
     embeddings: Optional[OpenAIEmbeddings] = None
     if use_vectors and args.openaihost != "openai":
         azure_open_ai_credential: Union[AsyncTokenCredential, AzureKeyCredential] = (
-            credential if is_key_empty(args.openaikey) else AzureKeyCredential(args.openaikey)
+            credential if is_key_empty(
+                args.openaikey) else AzureKeyCredential(args.openaikey)
         )
         embeddings = AzureOpenAIEmbeddingService(
             open_ai_service=args.openaiservice,
@@ -81,8 +84,10 @@ def setup_file_strategy(credential: AsyncTokenCredential, args: Any) -> FileStra
     print("Processing files...")
     list_file_strategy: ListFileStrategy
     if args.datalakestorageaccount:
-        adls_gen2_creds = credential if is_key_empty(args.datalakekey) else args.datalakekey
-        print(f"Using Data Lake Gen2 Storage Account {args.datalakestorageaccount}")
+        adls_gen2_creds = credential if is_key_empty(
+            args.datalakekey) else args.datalakekey
+        print(
+            f"Using Data Lake Gen2 Storage Account {args.datalakestorageaccount}")
         list_file_strategy = ADLSGen2ListFileStrategy(
             data_lake_storage_account=args.datalakestorageaccount,
             data_lake_filesystem=args.datalakefilesystem,
@@ -92,7 +97,8 @@ def setup_file_strategy(credential: AsyncTokenCredential, args: Any) -> FileStra
         )
     else:
         print(f"Using local files in {args.files}")
-        list_file_strategy = LocalListFileStrategy(path_pattern=args.files, verbose=args.verbose)
+        list_file_strategy = LocalListFileStrategy(
+            path_pattern=args.files, verbose=args.verbose)
 
     if args.removeall:
         document_action = DocumentAction.RemoveAll
@@ -116,7 +122,8 @@ def setup_file_strategy(credential: AsyncTokenCredential, args: Any) -> FileStra
 
 async def main(strategy: Strategy, credential: AsyncTokenCredential, args: Any):
     search_creds: Union[AsyncTokenCredential, AzureKeyCredential] = (
-        credential if is_key_empty(args.searchkey) else AzureKeyCredential(args.searchkey)
+        credential if is_key_empty(
+            args.searchkey) else AzureKeyCredential(args.searchkey)
     )
     search_info = SearchInfo(
         endpoint=f"https://{args.searchservice}.search.windows.net/",
@@ -163,8 +170,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--skipblobs", action="store_true", help="Skip uploading individual pages to Azure Blob Storage"
     )
-    parser.add_argument("--storageaccount", help="Azure Blob Storage account name")
-    parser.add_argument("--container", help="Azure Blob Storage container name")
+    parser.add_argument("--storageaccount",
+                        help="Azure Blob Storage account name")
+    parser.add_argument(
+        "--container", help="Azure Blob Storage container name")
     parser.add_argument(
         "--storagekey",
         required=False,
@@ -192,14 +201,16 @@ if __name__ == "__main__":
         default="en.microsoft",
         help="Optional. Name of the Azure AI Search analyzer to use for the content field in the index",
     )
-    parser.add_argument("--openaihost", help="Host of the API used to compute embeddings ('azure' or 'openai')")
-    parser.add_argument("--openaiservice", help="Name of the Azure OpenAI service used to compute embeddings")
+    parser.add_argument(
+        "--openaihost", help="Host of the API used to compute embeddings ('azure' or 'openai')")
+    parser.add_argument(
+        "--openaiservice", help="Name of the Azure OpenAI service used to compute embeddings")
     parser.add_argument(
         "--openaideployment",
-        help="Name of the Azure OpenAI model deployment for an embedding model ('text-embedding-ada-002' recommended)",
+        help="Name of the Azure OpenAI model deployment for an embedding model ('text-embedding-3-large' recommended)",
     )
     parser.add_argument(
-        "--openaimodelname", help="Name of the Azure OpenAI embedding model ('text-embedding-ada-002' recommended)"
+        "--openaimodelname", help="Name of the Azure OpenAI embedding model ('text-embedding-3-large' recommended)"
     )
     parser.add_argument(
         "--novectors",
@@ -214,7 +225,8 @@ if __name__ == "__main__":
         required=False,
         help="Optional. Use this Azure OpenAI account key instead of the current user identity to login (use az login to set current user for Azure). This is required only when using non-Azure endpoints.",
     )
-    parser.add_argument("--openaiorg", required=False, help="This is required only when using non-Azure endpoints.")
+    parser.add_argument("--openaiorg", required=False,
+                        help="This is required only when using non-Azure endpoints.")
     parser.add_argument(
         "--remove",
         action="store_true",
@@ -241,10 +253,12 @@ if __name__ == "__main__":
         help="Optional. Use this Azure Document Intelligence account key instead of the current user identity to login (use az login to set current user for Azure)",
     )
 
-    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
+    parser.add_argument("--verbose", "-v",
+                        action="store_true", help="Verbose output")
     args = parser.parse_args()
 
-    azd_credential = DefaultAzureCredential(exclude_shared_token_cache_credential=True)
+    azd_credential = DefaultAzureCredential(
+        exclude_shared_token_cache_credential=True)
     file_strategy = setup_file_strategy(azd_credential, args)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main(file_strategy, azd_credential, args))

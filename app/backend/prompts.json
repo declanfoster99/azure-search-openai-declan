@@ -170,8 +170,8 @@
     }
   },
   "wordcount_settings": {
-    "1": "Ensure that your response absolutely does not exceed 100 words",
-    "2": "Ensure that your response absolutely does not exceed 200 words",
-    "3": "Ensure that your response absolutely does not exceed 300 words"
+    "1": "Ensure that your response targets a wordcount of approximately 100 words",
+    "2": "Ensure that your response targets a wordcount of approximately 200 words",
+    "3": "Ensure that your response targets a wordcount of approximately 300 words"
   }
 }

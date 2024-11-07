@@ -57,26 +57,32 @@ class SearchManager:
 
     async def create_index(self):
         if self.search_info.verbose:
-            print(f"Ensuring search index {self.search_info.index_name} exists")
+            print(
+                f"Ensuring search index {self.search_info.index_name} exists")
 
         async with self.search_info.create_search_index_client() as search_index_client:
             fields = [
                 SimpleField(name="id", type="Edm.String", key=True),
-                SearchableField(name="content", type="Edm.String", analyzer_name=self.search_analyzer_name),
+                SearchableField(name="content", type="Edm.String",
+                                analyzer_name=self.search_analyzer_name),
                 SearchField(
                     name="embedding",
-                    type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
+                    type=SearchFieldDataType.Collection(
+                        SearchFieldDataType.Single),
                     hidden=False,
                     searchable=True,
                     filterable=False,
                     sortable=False,
                     facetable=False,
-                    vector_search_dimensions=1536,
+                    vector_search_dimensions=3072,
                     vector_search_profile="embedding_config",
                 ),
-                SimpleField(name="category", type="Edm.String", filterable=True, facetable=True),
-                SimpleField(name="sourcepage", type="Edm.String", filterable=True, facetable=True),
-                SimpleField(name="sourcefile", type="Edm.String", filterable=True, facetable=True),
+                SimpleField(name="category", type="Edm.String",
+                            filterable=True, facetable=True),
+                SimpleField(name="sourcepage", type="Edm.String",
+                            filterable=True, facetable=True),
+                SimpleField(name="sourcefile", type="Edm.String",
+                            filterable=True, facetable=True),
             ]
             if self.use_acls:
                 fields.append(
@@ -121,15 +127,18 @@ class SearchManager:
             )
             if self.search_info.index_name not in [name async for name in search_index_client.list_index_names()]:
                 if self.search_info.verbose:
-                    print(f"Creating {self.search_info.index_name} search index")
+                    print(
+                        f"Creating {self.search_info.index_name} search index")
                 await search_index_client.create_index(index)
             else:
                 if self.search_info.verbose:
-                    print(f"Search index {self.search_info.index_name} already exists")
+                    print(
+                        f"Search index {self.search_info.index_name} already exists")
 
     async def update_content(self, sections: List[Section]):
         MAX_BATCH_SIZE = 1000
-        section_batches = [sections[i : i + MAX_BATCH_SIZE] for i in range(0, len(sections), MAX_BATCH_SIZE)]
+        section_batches = [sections[i: i + MAX_BATCH_SIZE]
+                           for i in range(0, len(sections), MAX_BATCH_SIZE)]
 
         async with self.search_info.create_search_client() as search_client:
             for batch_index, batch in enumerate(section_batches):
@@ -157,7 +166,8 @@ class SearchManager:
 
     async def remove_content(self, path: Optional[str] = None):
         if self.search_info.verbose:
-            print(f"Removing sections from '{path or '<all>'}' from search index '{self.search_info.index_name}'")
+            print(
+                f"Removing sections from '{path or '<all>'}' from search index '{self.search_info.index_name}'")
         async with self.search_info.create_search_client() as search_client:
             while True:
                 filter = None if path is None else f"sourcefile eq '{os.path.basename(path)}'"
